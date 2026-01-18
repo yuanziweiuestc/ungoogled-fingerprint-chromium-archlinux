@@ -13,7 +13,7 @@ pkgname=ungoogled-chromium
 pkgver=139.0.7258.154
 pkgrel=1
 _launcher_ver=8
-_manual_clone=0
+_manual_clone=1
 _system_clang=1
 # ungoogled chromium variables
 _uc_usr=adryfish
