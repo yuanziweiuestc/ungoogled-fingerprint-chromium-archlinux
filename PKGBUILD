@@ -13,10 +13,10 @@ pkgname=ungoogled-chromium
 pkgver=139.0.7258.154
 pkgrel=1
 _launcher_ver=8
-_manual_clone=1
+_manual_clone=0
 _system_clang=1
 # ungoogled chromium variables
-_uc_usr=ungoogled-software
+_uc_usr=adryfish
 _uc_ver=139.0.7258.154-1
 pkgdesc="A lightweight approach to removing Google web service dependency"
 arch=('x86_64')
@@ -38,7 +38,7 @@ provides=("chromium=$pkgver" "chromedriver=$pkgver")
 conflicts=('chromium' 'chromedriver')
 options=('!lto') # Chromium adds its own flags for ThinLTO
 source=(https://commondatastorage.googleapis.com/chromium-browser-official/chromium-$pkgver-lite.tar.xz
-        $pkgname-$_uc_ver.tar.gz::https://github.com/$_uc_usr/ungoogled-chromium/archive/$_uc_ver.tar.gz
+        $pkgname-$_uc_ver.tar.gz::https://github.com/$_uc_usr/fingerprint-chromium/archive/refs/tags/$pkgver.tar.gz
         https://github.com/foutrelis/chromium-launcher/archive/v$_launcher_ver/chromium-launcher-$_launcher_ver.tar.gz
         compiler-rt-adjust-paths.patch
         increase-fortify-level.patch
@@ -50,8 +50,8 @@ source=(https://commondatastorage.googleapis.com/chromium-browser-official/chrom
         0001-vaapi-flag-ozone-wayland.patch
         chromium-138-nodejs-version-check.patch
         chromium-138-rust-1.86-mismatched_lifetime_syntaxes.patch)
-sha256sums=('720a1196410080056cd97a1f5ec34d68ba216a281d9b5157b7ea81ea018ec661'
-            'f70d1e9b180fcf4e65cb07a632c781aee02e11a3f6cb218974287f81a8e7122e'
+sha256sums=('SKIP'
+            '8453f07c93ecee21c09f935810bc2b8d5753789ff861a55b8451144bbe69ffdb'
             '213e50f48b67feb4441078d50b0fd431df34323be15be97c55302d3fdac4483a'
             'a6507371588ed4d87d6501220249264abfbcd814771cc1ba351e0ac6cc987400'
             'd634d2ce1fc63da7ac41f432b1e84c59b7cceabf19d510848a7cff40c8025342'
@@ -148,7 +148,7 @@ prepare() {
   fi
 
   # Ungoogled Chromium changes
-  _ungoogled_repo="$srcdir/$pkgname-$_uc_ver"
+  _ungoogled_repo="$srcdir/fingerprint-chromium-$pkgver"
   _utils="${_ungoogled_repo}/utils"
   msg2 'Pruning binaries'
   python "$_utils/prune_binaries.py" ./ "$_ungoogled_repo/pruning.list" || echo "some errors"
@@ -228,7 +228,7 @@ build() {
   fi
 
   # Append ungoogled chromium flags to _flags array
-  _ungoogled_repo="$srcdir/$pkgname-$_uc_ver"
+  _ungoogled_repo="$srcdir/fingerprint-chromium-$pkgver"
   readarray -t -O ${#_flags[@]} _flags < "${_ungoogled_repo}/flags.gn"
 
   if (( _system_clang )); then
