@@ -10,14 +10,14 @@
 # Contributor: Daniel J Griffiths <ghost1227@archlinux.us>
 
 pkgname=ungoogled-chromium
-pkgver=139.0.7258.154
+pkgver=142.0.7444.175
 pkgrel=1
 _launcher_ver=8
 _manual_clone=1
 _system_clang=1
 # ungoogled chromium variables
 _uc_usr=adryfish
-_uc_ver=139.0.7258.154-1
+_uc_ver=142.0.7444.175-1
 pkgdesc="A lightweight approach to removing Google web service dependency"
 arch=('x86_64')
 url="https://github.com/ungoogled-software/ungoogled-chromium"
@@ -27,7 +27,7 @@ depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
          'libffi' 'desktop-file-utils' 'hicolor-icon-theme')
 makedepends=('python' 'gn' 'ninja' 'clang' 'lld' 'gperf' 'nodejs' 'pipewire'
              'rust' 'rust-bindgen' 'qt6-base' 'java-runtime-headless'
-             'git')
+             'git' 'compiler-rt')
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'kdialog: support for native dialogs in Plasma'
             'gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)'
@@ -49,11 +49,12 @@ source=(https://commondatastorage.googleapis.com/chromium-browser-official/chrom
         0001-ozone-wayland-implement-text_input_manager-fixes.patch
         0001-vaapi-flag-ozone-wayland.patch
         chromium-138-nodejs-version-check.patch
-        chromium-138-rust-1.86-mismatched_lifetime_syntaxes.patch)
+        chromium-138-rust-1.86-mismatched_lifetime_syntaxes.patch
+        chromium-141-cssstylesheet-iwyu.patch)
 sha256sums=('SKIP'
-            '8453f07c93ecee21c09f935810bc2b8d5753789ff861a55b8451144bbe69ffdb'
+            'SKIP'
             '213e50f48b67feb4441078d50b0fd431df34323be15be97c55302d3fdac4483a'
-            'a6507371588ed4d87d6501220249264abfbcd814771cc1ba351e0ac6cc987400'
+            'ec8e49b7114e2fa2d359155c9ef722ff1ba5fe2c518fa48e30863d71d3b82863'
             'd634d2ce1fc63da7ac41f432b1e84c59b7cceabf19d510848a7cff40c8025342'
             'e6da901e4d0860058dc2f90c6bbcdc38a0cf4b0a69122000f62204f24fa7e374'
             '8ba5c67b7eb6cacd2dbbc29e6766169f0fca3bbb07779b1a0a76c913f17d343f'
@@ -62,7 +63,8 @@ sha256sums=('SKIP'
             'a2da75d0c20529f2d635050e0662941c0820264ea9371eb900b9d90b5968fa6a'
             '9a5594293616e1390462af1f50276ee29fd6075ffab0e3f944f6346cb2eb8aec'
             '11a96ffa21448ec4c63dd5c8d6795a1998d8e5cd5a689d91aea4d2bdd13fb06e'
-            '5abc8611463b3097fc5ce58017ef918af8b70d616ad093b8b486d017d021bbdf')
+            '5abc8611463b3097fc5ce58017ef918af8b70d616ad093b8b486d017d021bbdf'
+            'de5c873564b09713b65dd9e6a0b9049d7b3cf8f881436f36e1c091824b63e876')
 
 if (( _manual_clone )); then
   source[0]=fetch-chromium-release
@@ -127,6 +129,8 @@ prepare() {
   # Fixes from Gentoo
   patch -Np1 -i ../chromium-138-nodejs-version-check.patch
 
+  patch -Np1 -i ../chromium-141-cssstylesheet-iwyu.patch
+
   # Fixes from NixOS
   patch -Np1 -i ../chromium-138-rust-1.86-mismatched_lifetime_syntaxes.patch
 
@@ -178,6 +182,11 @@ prepare() {
 
   ./build/linux/unbundle/replace_gn_files.py \
     --system-libraries "${!_system_libs[@]}"
+
+  # Generate missing header
+  python3 build/util/lastchange.py -m DAWN_COMMIT_HASH \
+    -s third_party/dawn --revision gpu/webgpu/DAWN_VERSION \
+    --header gpu/webgpu/dawn_commit_hash.h
 }
 
 build() {
@@ -221,6 +230,7 @@ build() {
     'use_vaapi=true'
     'enable_platform_hevc=true'
     'enable_hevc_parser_and_hw_decoder=true'
+    'use_clang_modules=false'
   )
 
   if [[ -n ${_system_libs[icu]+set} ]]; then
